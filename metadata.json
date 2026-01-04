@@ -1,0 +1,7 @@
+{
+  "name": "CardSnap",
+  "description": "A beautiful, local-first web app that transforms business cards into searchable digital contacts using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
