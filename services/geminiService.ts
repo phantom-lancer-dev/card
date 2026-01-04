@@ -18,6 +18,31 @@ export const validateGeminiApiKey = async (key: string): Promise<boolean> => {
   }
 };
 
+// Helper to resize image for faster transmission
+const resizeImage = (base64Str: string, maxWidth = 1024, quality = 0.8): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(base64Str); // Fallback to original
+  });
+};
+
 export const analyzeCardImage = async (base64Image: string): Promise<ExtractedData> => {
   // 1. Try to get key from local storage (User provided)
   let apiKey = getApiKey();
@@ -26,10 +51,11 @@ export const analyzeCardImage = async (base64Image: string): Promise<ExtractedDa
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // 2. Resize Image before sending
+  const resizedBase64 = await resizeImage(base64Image);
+  const cleanBase64 = resizedBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  // Remove data URL prefix if present
-  const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await Promise.race([

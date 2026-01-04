@@ -2,7 +2,13 @@ export const GEMINI_MODEL = 'models/gemini-3-flash-preview';
 
 export const CARD_PROMPT = `
 Analyze this business card image and extract the following information 
-in JSON format. Be strict—only extract what's clearly visible. 
+in JSON format. 
+
+Instructions:
+1. Be strict—only extract what is clearly visible or inferred from a QR code.
+2. If a field is missing, return null. DO NOT use placeholders like "N/A" or "Unknown".
+3. Check for a QR code. If one is present and visually decodable as a URL or vCard, use its content to fill in missing details (e.g., website, email, phone).
+4. If a URL is found (text or QR), prioritize it for the 'website' field.
 
 Required JSON structure:
 {
