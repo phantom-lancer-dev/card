@@ -4,12 +4,17 @@ import { Camera } from 'lucide-react';
 interface CameraCaptureProps {
   onCapture: (file: File) => void;
   disabled?: boolean;
+  onActivate?: () => boolean;
 }
 
-export const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, disabled }) => {
+export const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, disabled, onActivate }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
+    if (onActivate) {
+      const shouldProceed = onActivate();
+      if (!shouldProceed) return;
+    }
     fileInputRef.current?.click();
   };
 

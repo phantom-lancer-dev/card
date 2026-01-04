@@ -8,7 +8,7 @@ import { EditCardModal } from './components/EditCardModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AlphabetIndex } from './components/AlphabetIndex';
 import { analyzeCardImage } from './services/geminiService';
-import { getCards, saveCard, deleteCard, mockSyncToSheets } from './services/storageService';
+import { getCards, saveCard, deleteCard, mockSyncToSheets, getApiKey } from './services/storageService';
 import { CardData, User, ProcessingStatus } from './types';
 
 // Mock User Data
@@ -136,7 +136,7 @@ const App: React.FC = () => {
             handleSync(updatedCard);
           }
 
-        } catch (error) {
+        } catch (error: any) {
           console.error("Analysis Failed", error);
           const errorCard = {
             ...newCard,
@@ -147,7 +147,7 @@ const App: React.FC = () => {
           };
           setCards(saveCard(errorCard));
           setProcessingStatus(ProcessingStatus.ERROR);
-          showNotification("Failed to analyze card. Try again.", 'error');
+          showNotification(`Analysis failed: ${error.message || 'Unknown error'}`, 'error');
         } finally {
           setIsProcessing(false);
         }
@@ -241,6 +241,16 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCameraActivate = () => {
+    const key = getApiKey();
+    if (!key) {
+      showNotification("Please set your Gemini API Key in Settings to scan cards.", 'error');
+      setIsSettingsOpen(true);
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className="min-h-screen pb-24 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
       <Header 
@@ -299,7 +309,11 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <CameraCapture onCapture={handleCapture} disabled={isProcessing} />
+      <CameraCapture 
+        onCapture={handleCapture} 
+        disabled={isProcessing} 
+        onActivate={handleCameraActivate}
+      />
 
       {editingCard && (
         <EditCardModal 

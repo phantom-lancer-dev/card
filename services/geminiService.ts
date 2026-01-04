@@ -32,55 +32,62 @@ export const analyzeCardImage = async (base64Image: string): Promise<ExtractedDa
   const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
   try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: {
-        parts: [
-          {
-            text: CARD_PROMPT
-          },
-          {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: cleanBase64
+    const response = await Promise.race([
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: {
+          parts: [
+            {
+              text: CARD_PROMPT
+            },
+            {
+              inlineData: {
+                mimeType: 'image/jpeg',
+                data: cleanBase64
+              }
             }
+          ]
+        },
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING, nullable: true },
+              company: { type: Type.STRING, nullable: true },
+              phone: { 
+                type: Type.ARRAY, 
+                items: { type: Type.STRING },
+                nullable: true 
+              },
+              email: { 
+                type: Type.ARRAY, 
+                items: { type: Type.STRING },
+                nullable: true 
+              },
+              website: { type: Type.STRING, nullable: true },
+              description: { type: Type.STRING, nullable: true },
+              tags: { 
+                type: Type.ARRAY, 
+                items: { type: Type.STRING },
+                nullable: true 
+              },
+            },
+            required: ["name", "company", "tags"]
           }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            name: { type: Type.STRING, nullable: true },
-            company: { type: Type.STRING, nullable: true },
-            phone: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING },
-              nullable: true 
-            },
-            email: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING },
-              nullable: true 
-            },
-            website: { type: Type.STRING, nullable: true },
-            description: { type: Type.STRING, nullable: true },
-            tags: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING },
-              nullable: true 
-            },
-          },
-          required: ["name", "company", "tags"]
         }
-      }
-    });
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Request timed out after 30 seconds")), 30000))
+    ]) as any; // Cast to any because race returns unknown vs GenerateContentResult
 
-    const text = response.text;
+    let text = typeof response.text === 'function' ? response.text() : response.text;
+    
     if (!text) {
       throw new Error("No response from Gemini");
     }
+
+    // Clean markdown code blocks if present (e.g. ```json ... ```)
+    text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
 
     const data = JSON.parse(text);
     

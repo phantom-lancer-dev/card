@@ -1,4 +1,4 @@
-export const GEMINI_MODEL = 'gemini-3-flash-preview';
+export const GEMINI_MODEL = 'models/gemini-3-flash-preview';
 
 export const CARD_PROMPT = `
 Analyze this business card image and extract the following information 

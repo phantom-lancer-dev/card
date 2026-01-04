@@ -5,7 +5,7 @@ CardSnap is a local-first, Progressive Web App (PWA)-ready solution built with R
 
 ### Architecture & Core Technology
 - **State Management:** React `useState` and `useEffect` drive local state. Data persistence is handled via browser `localStorage` (CRUD operations in `storageService.ts`).
-- **AI Integration:** The app uses `@google/genai` (Gemini Flash 1.5/2.0 models) to process Base64 images. It utilizes "Structured Output" (JSON Schema) to force the AI to return strictly formatted contact data (Arrays for phones/emails, nullable strings for others).
+- **AI Integration:** The app uses `@google/genai` (Model: `gemini-2.0-flash`) to process Base64 images. It utilizes "Structured Output" (JSON Schema) to force the AI to return strictly formatted contact data. A 30-second timeout is enforced to prevent hanging.
 - **Styling:** Tailwind CSS (v3) is now installed as a dependency (native build) replacing the CDN, ensuring offline functionality. A custom Tailwind configuration defines the Zinc-based neutral palette and fonts.
 - **Mobile/Native:** Capacitor (Android) has been initialized to wrap the web app into a native APK. GitHub Actions is configured to build the APK automatically.
 
@@ -32,4 +32,4 @@ CardSnap is a local-first, Progressive Web App (PWA)-ready solution built with R
 
 ## 2. Infrastructure
 - **Build System:** Vite.
-- **CI/CD:** GitHub Actions workflow (`.github/workflows/build.yml`) compiles the Android APK.
+- **CI/CD:** GitHub Actions workflow (`.github/workflows/build.yml`) compiles the Android APK (Node 22, Java 21).
